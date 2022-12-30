@@ -14,11 +14,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func auth(c *gin.Context) {
+	token := c.GetHeader("Authorization")
+	if token != "November 10, 2009" {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	c.Next()
+}
+
 func main() {
 	fmt.Printf("DB URL: %q\n", os.Getenv("DATABASE_URL"))
 
 	r := gin.Default()
+	// Middlewares
+	r.Use(auth)
 	r.SetTrustedProxies([]string{"127.0.0.1"})
+	// Handlers
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
