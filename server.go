@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 )
 
 func auth(c *gin.Context) {
@@ -24,7 +25,24 @@ func auth(c *gin.Context) {
 }
 
 func main() {
-	fmt.Printf("DB URL: %q\n", os.Getenv("DATABASE_URL"))
+	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Fatal("Connect to database failed: ", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS expenses (
+			id SERIAL PRIMARY KEY,
+			title TEXT,
+			amount FLOAT,
+			note TEXT,
+			tags TEXT[]
+		);
+	`)
+	if err != nil {
+		log.Fatal("create expenses table failed: ", err)
+	}
 
 	r := gin.Default()
 	// Middlewares
