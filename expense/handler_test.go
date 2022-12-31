@@ -36,7 +36,7 @@ func TestCreateExpense(t *testing.T) {
 	}
 	defer db.Close()
 	mock.ExpectExec("INSERT INTO expenses").
-		WithArgs("title", body.Title, "amount", body.Amount, "note", body.Note, "tags", pq.Array(&body.Tags)).
+		WithArgs(body.Title, body.Amount, body.Note, pq.Array(&body.Tags)).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	h := NewHandler(db)
