@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jsritawan/assessment/expense"
 	_ "github.com/lib/pq"
 )
 
@@ -55,6 +56,8 @@ func main() {
 		})
 	})
 
+	h := expense.NewHandler(db)
+	r.POST("/expenses", h.CreateExpense)
 	srv := &http.Server{
 		Addr:    ":" + os.Getenv("PORT"),
 		Handler: r,
