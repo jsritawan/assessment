@@ -17,7 +17,7 @@ import (
 
 func auth(c *gin.Context) {
 	token := c.GetHeader("Authorization")
-	if token != "November 10, 2009" {
+	if c.Request.URL.Path != "/health" && token != "November 10, 2009" {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
@@ -49,9 +49,9 @@ func main() {
 	r.Use(auth)
 	r.SetTrustedProxies([]string{"127.0.0.1"})
 	// Handlers
-	r.GET("/ping", func(c *gin.Context) {
+	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
+			"message": "OK",
 		})
 	})
 
