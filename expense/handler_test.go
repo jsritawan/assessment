@@ -47,7 +47,7 @@ func TestCreateExpense(t *testing.T) {
 
 	h := NewHandler(db)
 	r := gin.Default()
-	r.POST("/expenses", h.CreateExpense)
+	r.POST("/expenses", h.Create)
 	b, _ := json.Marshal(Expense{
 		ID:     1,
 		Title:  "strawberry smoothie",
@@ -66,4 +66,13 @@ func TestCreateExpense(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, rec.Code)
 		assert.Equal(t, expect, strings.TrimSpace(rec.Body.String()))
 	}
+}
+
+func TestGetExpenseDetailById(t *testing.T) {
+	// Arrange
+
+	// Act
+
+	// Assert
+	t.Error("not implemented yet")
 }

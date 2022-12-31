@@ -57,7 +57,9 @@ func main() {
 	})
 
 	h := expense.NewHandler(db)
-	r.POST("/expenses", h.CreateExpense)
+	r.POST("/expenses", h.Create)
+	r.GET("/expenses/:id", h.Get)
+
 	srv := &http.Server{
 		Addr:    ":" + os.Getenv("PORT"),
 		Handler: r,
