@@ -18,6 +18,6 @@ func NewHandler(db *sql.DB) *handler {
 	}
 }
 
-func (h *handler) CreateExpense(c *gin.Context) error {
-	return c.AbortWithError(http.StatusInternalServerError, errors.New("not implemented yet"))
+func (h *handler) CreateExpense(c *gin.Context) {
+	c.AbortWithError(http.StatusInternalServerError, errors.New("not implemented yet"))
 }
