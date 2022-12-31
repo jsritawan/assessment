@@ -32,14 +32,18 @@ func TestCreateExpense(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
-	db, mock, err := sqlmock.New()
+	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	if err != nil {
 		t.Errorf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 	defer db.Close()
-	mock.ExpectExec("INSERT INTO expenses").
+
+	mock.ExpectQuery(`
+	INSERT INTO expenses(title, amount, note, tags)
+	VALUES ($1, $2, $3, $4)
+	RETURNING id`).
 		WithArgs(body.Title, body.Amount, body.Note, pq.Array(&body.Tags)).
-		WillReturnResult(sqlmock.NewResult(1, 1))
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 
 	h := NewHandler(db)
 	r := gin.Default()
