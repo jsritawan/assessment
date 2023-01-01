@@ -133,7 +133,7 @@ func TestUpdateExpense(t *testing.T) {
 	r := gin.Default()
 	r.PUT("/expenses/:id", h.Update)
 
-	expect := `{"id":"1","title":"apple smoothie","amount":89,"note":"no discount","tags":["beverage"]}`
+	expect := `{"id":1,"title":"apple smoothie","amount":89,"note":"no discount","tags":["beverage"]}`
 
 	// Act
 	r.ServeHTTP(rec, req)
