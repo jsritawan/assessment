@@ -2,7 +2,6 @@ package expense
 
 import (
 	"database/sql"
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -63,7 +62,30 @@ func (h *handler) Get(c *gin.Context) {
 }
 
 func (h *handler) GetAll(c *gin.Context) {
-	c.AbortWithError(http.StatusInternalServerError, errors.New("not implemented"))
+	var expenses []Expense
+
+	stmt, err := h.DB.Prepare("SELECT id, title, amount, note, tags FROM expenses")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	rows, err := stmt.Query()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	for rows.Next() {
+		var expense Expense
+		if err := rows.Scan(&expense.ID, &expense.Title, &expense.Amount, &expense.Note, pq.Array(&expense.Tags)); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		expenses = append(expenses, expense)
+	}
+
+	c.JSON(http.StatusOK, expenses)
 }
 
 func (h *handler) Update(c *gin.Context) {
