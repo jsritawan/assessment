@@ -49,7 +49,7 @@ func TestCreateExpense(t *testing.T) {
 	r := gin.Default()
 	r.POST("/expenses", h.CreateExpense)
 	b, _ := json.Marshal(Expense{
-		ID:     1,
+		ID:     "1",
 		Title:  "strawberry smoothie",
 		Amount: 79,
 		Note:   "night market promotion discount 10 bath",
@@ -70,9 +70,43 @@ func TestCreateExpense(t *testing.T) {
 
 func TestUpdateExpense(t *testing.T) {
 	// Arrange
+	body := `
+	{
+		"title": "apple smoothie",
+		"amount": 89,
+		"note": "no discount",
+		"tags": ["beverage"]
+	}`
+	req := httptest.NewRequest(http.MethodPut, "/expenses/1", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Errorf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectExec("UPDATE expenses").
+		WithArgs("1", "apple smoothie", 89, "no discount", pq.Array([]string{"beverage"}))
+	h := NewHandler(db)
+	r := gin.Default()
+	r.PUT("/expenses/:id", h.Update)
+
+	expect := `
+	{
+		"id": "1",
+		"title": "apple smoothie",
+		"amount": 89,
+		"note": "no discount",
+		"tags": ["beverage"]
+	}`
 
 	// Act
+	r.ServeHTTP(rec, req)
 
 	// Assert
-	t.Errorf("not implemented yet")
+	assert.NoError(t, mock.ExpectationsWereMet())
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, expect, strings.TrimSpace(rec.Body.String()))
 }
