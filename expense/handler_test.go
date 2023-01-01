@@ -49,7 +49,7 @@ func TestCreateExpense(t *testing.T) {
 	r := gin.Default()
 	r.POST("/expenses", h.CreateExpense)
 	b, _ := json.Marshal(Expense{
-		ID:     "1",
+		ID:     1,
 		Title:  "strawberry smoothie",
 		Amount: 79,
 		Note:   "night market promotion discount 10 bath",
