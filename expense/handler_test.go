@@ -45,6 +45,7 @@ func TestCreateExpense(t *testing.T) {
 		WithArgs(body.Title, body.Amount, body.Note, pq.Array(&body.Tags)).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 
+	gin.SetMode(gin.ReleaseMode)
 	h := NewHandler(db)
 	r := gin.Default()
 	r.POST("/expenses", h.Create)
@@ -84,6 +85,8 @@ func TestGetExpenseDetailById(t *testing.T) {
 		WithArgs("1").
 		WillReturnRows(sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).
 			AddRow(1, "strawberry smoothie", 79, "night market promotion discount 10 bath", pq.Array(&[]string{"food", "beverage"})))
+
+	gin.SetMode(gin.ReleaseMode)
 	h := NewHandler(db)
 	r := gin.Default()
 	r.GET("/expenses/:id", h.Get)
@@ -125,11 +128,12 @@ func TestUpdateExpense(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).
 			AddRow("1", "apple smoothie", 89.0, "no discount", pq.Array([]string{"beverage"})))
 
+	gin.SetMode(gin.ReleaseMode)
 	h := NewHandler(db)
 	r := gin.Default()
 	r.PUT("/expenses/:id", h.Update)
 
-	expect := `{"id":"1","title":"apple smoothie","amount":89,"note":"no discount","tags":["beverage"]}`
+	expect := `{"id":1,"title":"apple smoothie","amount":89,"note":"no discount","tags":["beverage"]}`
 
 	// Act
 	r.ServeHTTP(rec, req)
@@ -139,4 +143,3 @@ func TestUpdateExpense(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Equal(t, expect, strings.TrimSpace(rec.Body.String()))
 }
-
