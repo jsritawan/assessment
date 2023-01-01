@@ -67,3 +67,12 @@ func TestCreateExpense(t *testing.T) {
 		assert.Equal(t, expect, strings.TrimSpace(rec.Body.String()))
 	}
 }
+
+func TestUpdateExpense(t *testing.T) {
+	// Arrange
+
+	// Act
+
+	// Assert
+	t.Errorf("not implemented yet")
+}

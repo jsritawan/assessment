@@ -2,6 +2,7 @@ package expense
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -41,4 +42,8 @@ func (h *handler) CreateExpense(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, expense)
+}
+
+func (h *handler) Update(c *gin.Context) {
+	c.AbortWithError(http.StatusInternalServerError, errors.New("not implemented yet"))
 }
