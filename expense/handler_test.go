@@ -101,6 +101,10 @@ func TestGetExpenseDetailById(t *testing.T) {
 	assert.Equal(t, expect, strings.TrimSpace(rec.Body.String()))
 }
 
+func TestGetAllExpenses(t *testing.T) {
+	t.Errorf("not implemented")
+}
+
 func TestUpdateExpense(t *testing.T) {
 	// Arrange
 	body := `
