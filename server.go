@@ -59,6 +59,7 @@ func main() {
 	h := expense.NewHandler(db)
 	r.POST("/expenses", h.Create)
 	r.GET("/expenses/:id", h.Get)
+	r.GET("/expenses", h.GetAll)
 	r.PUT("/expenses/:id", h.Update)
 
 	srv := &http.Server{

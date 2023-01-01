@@ -45,7 +45,7 @@ func TestCreateExpense(t *testing.T) {
 		WithArgs(body.Title, body.Amount, body.Note, pq.Array(&body.Tags)).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 
-	gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.TestMode)
 	h := NewHandler(db)
 	r := gin.Default()
 	r.POST("/expenses", h.Create)
@@ -86,7 +86,7 @@ func TestGetExpenseDetailById(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).
 			AddRow(1, "strawberry smoothie", 79, "night market promotion discount 10 bath", pq.Array(&[]string{"food", "beverage"})))
 
-	gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.TestMode)
 	h := NewHandler(db)
 	r := gin.Default()
 	r.GET("/expenses/:id", h.Get)
@@ -99,6 +99,58 @@ func TestGetExpenseDetailById(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Equal(t, expect, strings.TrimSpace(rec.Body.String()))
+}
+
+func TestGetAllExpenses(t *testing.T) {
+	// Arrange
+	req := httptest.NewRequest(http.MethodGet, "/expenses", nil)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Errorf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectPrepare("SELECT (.+) FROM expenses").
+		ExpectQuery().
+		WillReturnRows(sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).
+			AddRow(1, "strawberry smoothie", 79, "night market promotion discount 10 bath", pq.Array(&[]string{"food", "beverage"})).
+			AddRow(2, "apple smoothie", 89, "no discount", pq.Array(&[]string{"beverage"})))
+
+	gin.SetMode(gin.TestMode)
+	h := NewHandler(db)
+	r := gin.Default()
+	r.GET("/expenses", h.GetAll)
+	expect := []Expense{
+		{
+			ID:     1,
+			Title:  "strawberry smoothie",
+			Amount: 79,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   []string{"food", "beverage"},
+		},
+		{
+			ID:     2,
+			Title:  "apple smoothie",
+			Amount: 89,
+			Note:   "no discount",
+			Tags:   []string{"beverage"},
+		},
+	}
+	expectBytes, err := json.Marshal(expect)
+	if err != nil {
+		t.Errorf("an error '%s' was not expected when marshalling expenses", err)
+	}
+
+	// Act
+	r.ServeHTTP(rec, req)
+
+	// Assert
+	assert.NoError(t, mock.ExpectationsWereMet())
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, string(expectBytes), strings.TrimSpace(rec.Body.String()))
 }
 
 func TestUpdateExpense(t *testing.T) {
@@ -128,7 +180,7 @@ func TestUpdateExpense(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).
 			AddRow("1", "apple smoothie", 89.0, "no discount", pq.Array([]string{"beverage"})))
 
-	gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.TestMode)
 	h := NewHandler(db)
 	r := gin.Default()
 	r.PUT("/expenses/:id", h.Update)
