@@ -87,20 +87,19 @@ func TestUpdateExpense(t *testing.T) {
 	}
 	defer db.Close()
 
-	mock.ExpectExec("UPDATE expenses").
-		WithArgs("1", "apple smoothie", 89, "no discount", pq.Array([]string{"beverage"}))
+	mock.ExpectPrepare("UPDATE expenses").
+		ExpectExec().
+		WithArgs("1", "apple smoothie", 89.0, "no discount", pq.Array([]string{"beverage"})).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectQuery("SELECT (.+) FROM expenses").
+		WillReturnRows(sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).
+			AddRow("1", "apple smoothie", 89.0, "no discount", pq.Array([]string{"beverage"})))
+
 	h := NewHandler(db)
 	r := gin.Default()
 	r.PUT("/expenses/:id", h.Update)
 
-	expect := `
-	{
-		"id": "1",
-		"title": "apple smoothie",
-		"amount": 89,
-		"note": "no discount",
-		"tags": ["beverage"]
-	}`
+	expect := `{"id":"1","title":"apple smoothie","amount":89,"note":"no discount","tags":["beverage"]}`
 
 	// Act
 	r.ServeHTTP(rec, req)
