@@ -58,11 +58,12 @@ func main() {
 
 	h := expense.NewHandler(db)
 	r.POST("/expenses", h.CreateExpense)
+	r.PUT("/expenses/:id", h.Update)
+
 	srv := &http.Server{
 		Addr:    ":" + os.Getenv("PORT"),
 		Handler: r,
 	}
-	r.PUT("/expenses/:id", h.Update)
 
 	// Initializing the server in a goroutine so that
 	// it won't block the graceful shutdown handling below
