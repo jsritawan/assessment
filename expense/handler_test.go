@@ -181,44 +181,71 @@ func TestGetAllExpenses(t *testing.T) {
 }
 
 func TestUpdateExpense(t *testing.T) {
-	// Arrange
-	body := `
-	{
-		"title": "apple smoothie",
-		"amount": 89,
-		"note": "no discount",
-		"tags": ["beverage"]
-	}`
-	req := httptest.NewRequest(http.MethodPut, "/expenses/1", strings.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	rec := httptest.NewRecorder()
+	t.Run("Update Expense Bad Request", func(t *testing.T) {
+		// Arrange
+		req := httptest.NewRequest(http.MethodPut, "/expenses/1", strings.NewReader("invalid-request"))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
 
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Errorf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer db.Close()
+		db, _, err := sqlmock.New()
+		if err != nil {
+			t.Errorf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
 
-	mock.ExpectPrepare("UPDATE expenses").
-		ExpectExec().
-		WithArgs("1", "apple smoothie", 89.0, "no discount", pq.Array([]string{"beverage"})).
-		WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectQuery("SELECT (.+) FROM expenses").
-		WillReturnRows(sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).
-			AddRow("1", "apple smoothie", 89.0, "no discount", pq.Array([]string{"beverage"})))
+		gin.SetMode(gin.TestMode)
+		h := NewHandler(db)
+		r := gin.Default()
+		r.PUT("/expenses/:id", h.Update)
 
-	gin.SetMode(gin.TestMode)
-	h := NewHandler(db)
-	r := gin.Default()
-	r.PUT("/expenses/:id", h.Update)
+		// Act
+		r.ServeHTTP(rec, req)
 
-	expect := `{"id":1,"title":"apple smoothie","amount":89,"note":"no discount","tags":["beverage"]}`
+		// Assert
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
 
-	// Act
-	r.ServeHTTP(rec, req)
+	t.Run("Update Expense OK", func(t *testing.T) {
 
-	// Assert
-	assert.NoError(t, mock.ExpectationsWereMet())
-	assert.Equal(t, http.StatusOK, rec.Code)
-	assert.Equal(t, expect, strings.TrimSpace(rec.Body.String()))
+		// Arrange
+		body := `
+		{
+			"title": "apple smoothie",
+			"amount": 89,
+			"note": "no discount",
+			"tags": ["beverage"]
+		}`
+		req := httptest.NewRequest(http.MethodPut, "/expenses/1", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Errorf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+
+		mock.ExpectPrepare("UPDATE expenses").
+			ExpectExec().
+			WithArgs("1", "apple smoothie", 89.0, "no discount", pq.Array([]string{"beverage"})).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectQuery("SELECT (.+) FROM expenses").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).
+				AddRow("1", "apple smoothie", 89.0, "no discount", pq.Array([]string{"beverage"})))
+
+		gin.SetMode(gin.TestMode)
+		h := NewHandler(db)
+		r := gin.Default()
+		r.PUT("/expenses/:id", h.Update)
+
+		expect := `{"id":1,"title":"apple smoothie","amount":89,"note":"no discount","tags":["beverage"]}`
+
+		// Act
+		r.ServeHTTP(rec, req)
+
+		// Assert
+		assert.NoError(t, mock.ExpectationsWereMet())
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, expect, strings.TrimSpace(rec.Body.String()))
+	})
 }
