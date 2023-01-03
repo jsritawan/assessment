@@ -219,3 +219,57 @@ func TestITUpdateExpenseById(t *testing.T) {
 		assert.Equal(t, strings.TrimSpace(string(byteExpect)), strings.TrimSpace(string(byteUpdateBody)))
 	}
 }
+
+func TestITGetAllExpenses(t *testing.T) {
+	// Setup server
+	teardown := setupIT(t)
+	defer teardown()
+
+	// Arrange
+	reqCreateBody := `{
+		"title": "strawberry smoothie",
+		"amount": 79,
+		"note": "night market promotion discount 10 bath", 
+		"tags": ["food", "beverage"]
+	}`
+	reqCreate, err := http.NewRequest(http.MethodPost, fmt.Sprintf("http://localhost:%d/expenses", serverPort), strings.NewReader(reqCreateBody))
+	assert.NoError(t, err)
+	reqCreate.Header.Set("Content-Type", "application/json")
+
+	client := http.Client{}
+
+	// Act
+	respCreate, err := client.Do(reqCreate)
+	assert.NoError(t, err)
+	byteCreateBody, err := ioutil.ReadAll(respCreate.Body)
+	assert.NoError(t, err)
+	respCreate.Body.Close()
+
+	var createdExpense Expense
+	err = json.Unmarshal(byteCreateBody, &createdExpense)
+	if assert.NoError(t, err) {
+		assert.Equal(t, http.StatusCreated, respCreate.StatusCode)
+	}
+
+	reqGetAllBody := ``
+	reqGetAll, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://localhost:%d/expenses", serverPort), strings.NewReader(reqGetAllBody))
+	assert.NoError(t, err)
+	reqGetAll.Header.Set("Content-Type", "application/json")
+
+	respGetAll, err := client.Do(reqGetAll)
+	assert.NoError(t, err)
+	byteGetAllBody, err := ioutil.ReadAll(respGetAll.Body)
+	assert.NoError(t, err)
+	respGetAll.Body.Close()
+
+	t.Log(string(byteGetAllBody))
+
+	// Assertion
+	var expect []Expense
+	err = json.Unmarshal(byteGetAllBody, &expect)
+
+	if assert.NoError(t, err) {
+		assert.Equal(t, http.StatusOK, respGetAll.StatusCode)
+		assert.Equal(t, true, len(expect) > 0)
+	}
+}
