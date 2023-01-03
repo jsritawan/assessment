@@ -17,7 +17,7 @@ import (
 )
 
 func TestCreateExpense(t *testing.T) {
-	t.Run("Create Expense Bad Request", func(t *testing.T) {
+	t.Run("Create Expense With Invalid Request Shoud Return Bad Request", func(t *testing.T) {
 		// Arrange
 		req := httptest.NewRequest(http.MethodPost, "/expenses", strings.NewReader("invalid-request"))
 		req.Header.Set("Content-Type", "application/json")
@@ -41,7 +41,7 @@ func TestCreateExpense(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
-	t.Run("Create Expense OK", func(t *testing.T) {
+	t.Run("Create Expense Should Return OK", func(t *testing.T) {
 
 		// Arrange
 		body := Expense{
@@ -97,7 +97,7 @@ func TestCreateExpense(t *testing.T) {
 }
 
 func TestGetExpenseDetailById(t *testing.T) {
-	t.Run("Get Expense Detail By Id Bad Request", func(t *testing.T) {
+	t.Run("Get Expense Detail By Invalid Id Should Return Bad Request", func(t *testing.T) {
 		// Arrange
 		req := httptest.NewRequest(http.MethodGet, "/expenses/invalid-id", nil)
 		req.Header.Set("Content-Type", "application/json")
@@ -121,7 +121,7 @@ func TestGetExpenseDetailById(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
-	t.Run("Get Expense Detail By Id OK", func(t *testing.T) {
+	t.Run("Get Expense Detail By Id Should Return OK", func(t *testing.T) {
 		// Arrange
 		req := httptest.NewRequest(http.MethodGet, "/expenses/1", nil)
 		req.Header.Set("Content-Type", "application/json")
@@ -231,7 +231,7 @@ func TestUpdateExpense(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
-	t.Run("Update Expense Bad Request", func(t *testing.T) {
+	t.Run("Update Expense With Invalid Request Shoud Return Bad Request", func(t *testing.T) {
 		// Arrange
 		req := httptest.NewRequest(http.MethodPut, "/expenses/1", strings.NewReader("invalid-request"))
 		req.Header.Set("Content-Type", "application/json")
@@ -255,7 +255,7 @@ func TestUpdateExpense(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
 
-	t.Run("Update Expense OK", func(t *testing.T) {
+	t.Run("Update Expense Should Return OK", func(t *testing.T) {
 
 		// Arrange
 		body := `
