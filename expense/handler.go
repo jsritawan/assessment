@@ -93,6 +93,13 @@ func (h *handler) GetAll(c *gin.Context) {
 
 func (h *handler) Update(c *gin.Context) {
 	id := c.Param("id")
+
+	_, err := strconv.Atoi(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
 	var expense Expense
 	if err := c.BindJSON(&expense); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
