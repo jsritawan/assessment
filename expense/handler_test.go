@@ -17,56 +17,83 @@ import (
 )
 
 func TestCreateExpense(t *testing.T) {
-	// Arrange
-	body := Expense{
-		Title:  "strawberry smoothie",
-		Amount: 79,
-		Note:   "night market promotion discount 10 bath",
-		Tags:   []string{"food", "beverage"},
-	}
-	data, err := json.Marshal(body)
-	if err != nil {
-		t.Error("Error marshalling", err)
-	}
-	req := httptest.NewRequest(http.MethodPost, "/expenses", bytes.NewReader(data))
-	req.Header.Set("Content-Type", "application/json")
-	rec := httptest.NewRecorder()
+	t.Run("Create Expense Bad Request", func(t *testing.T) {
+		// Arrange
+		req := httptest.NewRequest(http.MethodPost, "/expenses", strings.NewReader("invalid-request"))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
 
-	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
-	if err != nil {
-		t.Errorf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer db.Close()
+		db, _, err := sqlmock.New()
+		if err != nil {
+			t.Errorf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
 
-	mock.ExpectQuery(`
-	INSERT INTO expenses(title, amount, note, tags)
-	VALUES ($1, $2, $3, $4)
-	RETURNING id`).
-		WithArgs(body.Title, body.Amount, body.Note, pq.Array(&body.Tags)).
-		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
+		gin.SetMode(gin.TestMode)
+		h := NewHandler(db)
+		r := gin.Default()
+		r.POST("/expenses", h.Create)
 
-	gin.SetMode(gin.TestMode)
-	h := NewHandler(db)
-	r := gin.Default()
-	r.POST("/expenses", h.Create)
-	b, _ := json.Marshal(Expense{
-		ID:     1,
-		Title:  "strawberry smoothie",
-		Amount: 79,
-		Note:   "night market promotion discount 10 bath",
-		Tags:   []string{"food", "beverage"},
+		// Act
+		r.ServeHTTP(rec, req)
+
+		// Assert
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
-	expect := string(b)
 
-	// Act
-	r.ServeHTTP(rec, req)
+	t.Run("Create Expense OK", func(t *testing.T) {
 
-	// Assert
-	err = mock.ExpectationsWereMet()
-	if assert.NoError(t, err) {
-		assert.Equal(t, http.StatusCreated, rec.Code)
-		assert.Equal(t, expect, strings.TrimSpace(rec.Body.String()))
-	}
+		// Arrange
+		body := Expense{
+			Title:  "strawberry smoothie",
+			Amount: 79,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   []string{"food", "beverage"},
+		}
+		data, err := json.Marshal(body)
+		if err != nil {
+			t.Error("Error marshalling", err)
+		}
+		req := httptest.NewRequest(http.MethodPost, "/expenses", bytes.NewReader(data))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		if err != nil {
+			t.Errorf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+
+		mock.ExpectQuery(`
+		INSERT INTO expenses(title, amount, note, tags)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id`).
+			WithArgs(body.Title, body.Amount, body.Note, pq.Array(&body.Tags)).
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
+
+		gin.SetMode(gin.TestMode)
+		h := NewHandler(db)
+		r := gin.Default()
+		r.POST("/expenses", h.Create)
+		b, _ := json.Marshal(Expense{
+			ID:     1,
+			Title:  "strawberry smoothie",
+			Amount: 79,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   []string{"food", "beverage"},
+		})
+		expect := string(b)
+
+		// Act
+		r.ServeHTTP(rec, req)
+
+		// Assert
+		err = mock.ExpectationsWereMet()
+		if assert.NoError(t, err) {
+			assert.Equal(t, http.StatusCreated, rec.Code)
+			assert.Equal(t, expect, strings.TrimSpace(rec.Body.String()))
+		}
+	})
 }
 
 func TestGetExpenseDetailById(t *testing.T) {
