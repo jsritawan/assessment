@@ -207,6 +207,30 @@ func TestGetAllExpenses(t *testing.T) {
 }
 
 func TestUpdateExpense(t *testing.T) {
+	t.Run("Update Expense Detail By Invalid Id Should Return Bad Request", func(t *testing.T) {
+		// Arrange
+		req := httptest.NewRequest(http.MethodPut, "/expenses/invalid-id", nil)
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+
+		db, _, err := sqlmock.New()
+		if err != nil {
+			t.Errorf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+
+		gin.SetMode(gin.TestMode)
+		h := NewHandler(db)
+		r := gin.Default()
+		r.PUT("/expenses/:id", h.Update)
+
+		// Act
+		r.ServeHTTP(rec, req)
+
+		// Assert
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
 	t.Run("Update Expense Bad Request", func(t *testing.T) {
 		// Arrange
 		req := httptest.NewRequest(http.MethodPut, "/expenses/1", strings.NewReader("invalid-request"))
