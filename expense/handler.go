@@ -3,6 +3,7 @@ package expense
 import (
 	"database/sql"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
@@ -45,7 +46,9 @@ func (h *handler) Create(c *gin.Context) {
 
 func (h *handler) Get(c *gin.Context) {
 	id := c.Param("id")
-	if id == "" {
+
+	_, err := strconv.Atoi(id)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
