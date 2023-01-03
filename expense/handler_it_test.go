@@ -21,8 +21,7 @@ import (
 
 const serverPort = 80
 
-func TestITCreateExpense(t *testing.T) {
-	// Setup server
+func setupIT(t *testing.T) func() {
 	gin.SetMode(gin.TestMode)
 	r := gin.Default()
 	db, err := sql.Open("postgres", "postgresql://root:root@db/go-assessment-db?sslmode=disable")
@@ -54,6 +53,18 @@ func TestITCreateExpense(t *testing.T) {
 			break
 		}
 	}
+	return func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		err = srv.Shutdown(ctx)
+		assert.NoError(t, err)
+	}
+}
+
+func TestITCreateExpense(t *testing.T) {
+	// Setup server
+	teardown := setupIT(t)
+	defer teardown()
 
 	// Arrange
 	reqBody := `{
@@ -89,9 +100,4 @@ func TestITCreateExpense(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, resp.StatusCode)
 		assert.Equal(t, byteExpect, byteBody)
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	err = srv.Shutdown(ctx)
-	assert.NoError(t, err)
 }
